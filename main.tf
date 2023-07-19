@@ -33,7 +33,67 @@ resource "aws_subnet" "private" {
     Name = format("%s-private-%d", var.vpc_name, count.index + 1)
   }
 }
+resource "aws_network_acl" "public" {
+  vpc_id = aws_vpc.main.id
 
+  subnet_ids = aws_subnet.public[*].id
+
+  tags = {
+    Name = format("%s-public-nacl", var.vpc_name)
+  }
+}
+
+resource "aws_network_acl" "private" {
+  vpc_id = aws_vpc.main.id
+
+  subnet_ids = aws_subnet.private[*].id
+
+  tags = {
+    Name = format("%s-private-nacl", var.vpc_name)
+  }
+}
+resource "aws_network_acl_rule" "public_inbound_rule" {
+  network_acl_id = aws_network_acl.public.id
+  rule_number    = 100
+  rule_action    = "allow"
+  protocol       = "6"  # TCP
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 80
+  to_port        = 80
+}
+
+resource "aws_network_acl_rule" "public_outbound_rule" {
+  network_acl_id = aws_network_acl.public.id
+  rule_number    = 100
+  rule_action    = "allow"
+  protocol       = "6"  # TCP
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 0
+  to_port        = 65535
+}
+resource "aws_network_acl_rule" "private_inbound_rule" {
+  network_acl_id = aws_network_acl.private.id
+  rule_number    = 100
+  rule_action    = "allow"
+  protocol       = "6"  # TCP
+  rule_action    = "allow"
+  cidr_block     = "10.0.0.0/8"  # CIDR block of your VPC (assuming it's 10.0.0.0/8)
+  from_port      = 0
+  to_port        = 65535
+}
+
+resource "aws_network_acl_rule" "private_outbound_rule" {
+  network_acl_id = aws_network_acl.private.id
+  rule_number    = 100
+  rule_action    = "allow"
+  protocol       = "6"  # TCP
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 0
+  to_port        = 65535
+}
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
 
