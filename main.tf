@@ -20,6 +20,7 @@ resource "aws_subnet" "public" {
   tags = {
     Name = format("%s-public-%d", var.vpc_name, count.index + 1)
   }
+  network_acl_id = aws_network_acl.public.id
 }
 
 resource "aws_subnet" "private" {
@@ -32,7 +33,9 @@ resource "aws_subnet" "private" {
   tags = {
     Name = format("%s-private-%d", var.vpc_name, count.index + 1)
   }
+  network_acl_id = aws_network_acl.private.id
 }
+
 resource "aws_network_acl" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -52,6 +55,7 @@ resource "aws_network_acl" "private" {
     Name = format("%s-private-nacl", var.vpc_name)
   }
 }
+
 resource "aws_network_acl_rule" "public_inbound_rule" {
   network_acl_id = aws_network_acl.public.id
   rule_number    = 100
@@ -73,6 +77,7 @@ resource "aws_network_acl_rule" "public_outbound_rule" {
   from_port      = 0
   to_port        = 65535
 }
+
 resource "aws_network_acl_rule" "private_inbound_rule" {
   network_acl_id = aws_network_acl.private.id
   rule_number    = 100
@@ -94,6 +99,7 @@ resource "aws_network_acl_rule" "private_outbound_rule" {
   from_port      = 0
   to_port        = 65535
 }
+
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
 
@@ -207,10 +213,3 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-output "public_subnet_ids" {
-  value = aws_subnet.public[*].id
-}
-
-output "private_subnet_ids" {
-  value = aws_subnet.private[*].id
-}
